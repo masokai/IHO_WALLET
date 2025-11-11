@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سیستم کیف پول سازمانی</title>
+    <link rel="stylesheet" href="shared/shared.css">
+    <link rel="stylesheet" href="login/login.css">
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazir-font@v30.1.0/dist/font-face.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- صفحه لاگین -->
+    <div id="loginPage" class="page active">
+        <div class="login-container">
+            <div class="logo">
+                <i class="fas fa-gift"></i>
+                <h1>سیستم کیف پول هدایا</h1>
+            </div>
+            
+            <div class="form-group">
+                <input type="email" id="email" placeholder="ایمیل" class="form-input">
+            </div>
+            <div class="form-group">
+                <input type="password" id="password" placeholder="رمز عبور" class="form-input">
+            </div>
+            
+            <div class="button-group">
+                <button onclick="login()" class="btn btn-primary">
+                    <i class="fas fa-user"></i> ورود کاربر
+                </button>
+                <button onclick="adminLogin()" class="btn btn-secondary">
+                    <i class="fas fa-cog"></i> ورود ادمین
+                </button>
+            </div>
+            
+            <div class="demo-accounts">
+                <h3><i class="fas fa-info-circle"></i> اکانت‌های آزمایشی:</h3>
+                <div class="demo-item">
+                    <strong>کاربران:</strong>
+                    <span>akhodabakhshiiho@gmail.com - رمز: 1234</span>
+                </div>
+                <div class="demo-item">
+                    <strong>ادمین:</strong>
+                    <span>رمز: admin123</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="shared/database.js"></script>
+    <script src="shared/shared.js"></script>
+    <script src="login/login.js"></script>
+</body>
+</html>

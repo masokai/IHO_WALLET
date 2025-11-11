@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>کیف پول کاربر - سیستم هدایا</title>
+    <link rel="stylesheet" href="../shared/shared.css">
+    <link rel="stylesheet" href="user.css">
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazir-font@v30.1.0/dist/font-face.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="user-info">
+                <h2><i class="fas fa-wallet"></i> کیف پول من</h2>
+                <span id="userName">خوش آمدید!</span>
+            </div>
+            <button onclick="logout()" class="btn btn-outline">
+                <i class="fas fa-sign-out-alt"></i> خروج
+            </button>
+        </div>
+        
+        <div class="balance-card">
+            <div class="balance-info">
+                <h3>موجودی شما</h3>
+                <div id="userBalance" class="balance-amount">0 واحد</div>
+            </div>
+            <div class="balance-icon">
+                <i class="fas fa-coins"></i>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="showTab('giftsTab')">🛍️ هدایا</button>
+            <button class="tab-btn" onclick="showTab('historyTab')">📊 تاریخچه</button>
+        </div>
+
+        <div id="giftsTab" class="tab-content active">
+            <div class="section-title">
+                <h3>هدایای قابل خرید</h3>
+                <p>از موجودی خود برای دریافت هدیه استفاده کنید</p>
+            </div>
+            <div id="giftsGrid" class="gifts-grid">
+                <!-- هدایا اینجا نمایش داده می‌شوند -->
+            </div>
+        </div>
+
+        <div id="historyTab" class="tab-content">
+            <div class="section-title">
+                <h3>تاریخچه تراکنش‌ها</h3>
+            </div>
+            <div id="transactionsList" class="transactions-list">
+                <!-- تراکنش‌ها اینجا نمایش داده می‌شوند -->
+            </div>
+        </div>
+    </div>
+
+    <!-- مودال خرید هدیه -->
+    <div id="giftModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('giftModal')">&times;</span>
+            <h3 id="giftModalTitle">خرید هدیه</h3>
+            <div id="giftModalContent"></div>
+        </div>
+    </div>
+
+    <script src="../shared/database.js"></script>
+    <script src="../shared/shared.js"></script>
+    <script src="user.js"></script>
+</body>
+</html>

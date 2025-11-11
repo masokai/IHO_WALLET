@@ -1,0 +1,21 @@
+wallet-system/
+│
+├── index.html              # صفحه اصلی - لاگین
+├── login/
+│   ├── login.css
+│   └── login.js
+├── user/
+│   ├── user.html
+│   ├── user.css
+│   └── user.js
+├── admin/
+│   ├── admin.html
+│   ├── admin.css
+│   └── admin.js
+├── shared/
+│   ├── shared.css          # استایل‌های مشترک
+│   ├── shared.js           # توابع مشترک
+│   └── database.js         # مدیریت دیتابیس
+└── assets/
+    ├── images/
+    └── icons/
