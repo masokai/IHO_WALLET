@@ -563,4 +563,23 @@ window.onclick = function(event) {
             modal.style.display = 'none';
         }
     });
+
+}
+// تست مستقیم API
+console.log('🔍 تست API...');
+
+// تست دریافت کاربران
+try {
+    const users = await api.getUsers();
+    console.log('✅ کاربران:', users);
+} catch (error) {
+    console.error('❌ خطا در دریافت کاربران:', error);
+}
+
+// تست دریافت هدایا
+try {
+    const gifts = await api.getGifts();
+    console.log('✅ هدایا:', gifts);
+} catch (error) {
+    console.error('❌ خطا در دریافت هدایا:', error);
 }
