@@ -1,5 +1,8 @@
 wallet-system/
-│
+├── backend/           ← پوشه جدید
+│   ├── server.js
+│   ├── package.json
+│   └── .env.example
 ├── index.html              # صفحه اصلی - لاگین
 ├── login/
 │   ├── login.css
