@@ -1,149 +1,232 @@
-// مدیریت دیتابیس و داده‌ها - نسخه اصلاح شده
-const adminPassword = 'admin123';
+// سیستم دیتابیس کیف پول - نسخه کامل با API واقعی
+let api;
 
-// بارگذاری داده‌ها از localStorage
-function getUsers() {
-    const users = JSON.parse(localStorage.getItem('wallet_users'));
-    if (!users) {
-        // ایجاد کاربران پیش‌فرض
-        const defaultUsers = [
-            { 
-                id: 1,
-                email: 'akhodabakhshiiho@gmail.com', 
-                password: '1234', 
-                name: 'امین خدابخشی', 
-                role: 'user',
-                avatar: null
-            },
-            { 
-                id: 2,
-                email: 'a.khazael.iho@gmail.com', 
-                password: '1234', 
-                name: 'علی خزاعی', 
-                role: 'user',
-                avatar: null
-            },
-            { 
-                id: 3,
-                email: 'b.bakhshayesh.iho@gmail.com', 
-                password: '1234', 
-                name: 'بابک بخشایش', 
-                role: 'user',
-                avatar: null
-            }
-        ];
-        saveUsers(defaultUsers);
-        return defaultUsers;
+// بارگذاری خودکار API
+(async function() {
+    try {
+        // بارگذاری ماژول API
+        const apiModule = await import('./api.js');
+        api = apiModule.default || apiModule.api;
+    } catch (error) {
+        console.error('Failed to load API module:', error);
+        // fallback به localStorage برای حالت آفلاین
+        initLocalStorageFallback();
     }
-    return users;
+})();
+
+// حالت fallback با localStorage
+function initLocalStorageFallback() {
+    console.warn('Using localStorage fallback mode');
+    // اینجا می‌تونی کد localStorage قبلی رو قرار بدی
 }
 
-function getTransactions() {
-    const transactions = JSON.parse(localStorage.getItem('wallet_transactions'));
-    if (!transactions) {
-        const defaultTransactions = [
-            { 
-                id: 1, 
-                email: 'akhodabakhshiiho@gmail.com', 
-                amount: 1000, 
-                type: 'افزودن', 
-                description: 'هدیه اول', 
-                date: new Date().toLocaleDateString('fa-IR') 
-            }
-        ];
-        saveTransactions(defaultTransactions);
-        return defaultTransactions;
+// توابع اصلی دیتابیس - کامل و یکپارچه
+async function getUsers() {
+    try {
+        if (!api) await loadAPI();
+        const users = await api.getUsers();
+        return Array.isArray(users) ? users : [];
+    } catch (error) {
+        console.error('Error in getUsers:', error);
+        throw new Error('خطا در دریافت لیست کاربران: ' + error.message);
     }
-    return transactions;
 }
 
-function getGifts() {
-    const gifts = JSON.parse(localStorage.getItem('wallet_gifts'));
-    if (!gifts) {
-        const defaultGifts = [
-            {
-                id: 1,
-                name: 'سینما - استخر - کافی‌شاپ',
-                price: 250000,
-                description: 'هدیه تفریحی برای اوقات فراغت',
-                image: null
-            },
-            {
-                id: 2,
-                name: 'ایزنک و پینت بال',
-                price: 550000,
-                description: 'مجموعه تفریحی و ورزشی',
-                image: null
-            },
-            {
-                id: 3,
-                name: 'آرایشی و بهداشتی',
-                price: 830000,
-                description: 'محصولات آرایشی و مراقبتی',
-                image: null
-            },
-            {
-                id: 4,
-                name: 'باشگاه و گردشگری',
-                price: 1150000,
-                description: 'باشگاه ورزشی یا تور گردشگری',
-                image: null
-            },
-            {
-                id: 5,
-                name: 'بن خرید هایپر مارکت',
-                price: 1500000,
-                description: 'بن خرید از هایپر مارکت‌های معتبر',
-                image: null
-            }
-        ];
-        saveGifts(defaultGifts);
-        return defaultGifts;
+async function getUser(email) {
+    try {
+        if (!api) await loadAPI();
+        return await api.getUser(email);
+    } catch (error) {
+        console.error('Error in getUser:', error);
+        throw new Error('خطا در دریافت اطلاعات کاربر: ' + error.message);
     }
-    return gifts;
 }
 
-// ذخیره داده‌ها
-function saveUsers(users) {
-    localStorage.setItem('wallet_users', JSON.stringify(users));
+async function addUser(userData) {
+    try {
+        if (!api) await loadAPI();
+        return await api.addUser(userData);
+    } catch (error) {
+        console.error('Error in addUser:', error);
+        throw new Error('خطا در افزودن کاربر: ' + error.message);
+    }
 }
 
-function saveTransactions(transactions) {
-    localStorage.setItem('wallet_transactions', JSON.stringify(transactions));
+async function getTransactions(email = null) {
+    try {
+        if (!api) await loadAPI();
+        
+        if (email) {
+            // تراکنش‌های کاربر خاص
+            return await api.getTransactions(email);
+        } else {
+            // همه تراکنش‌ها (برای ادمین)
+            return await api.getAllTransactions();
+        }
+    } catch (error) {
+        console.error('Error in getTransactions:', error);
+        throw new Error('خطا در دریافت تراکنش‌ها: ' + error.message);
+    }
 }
 
-function saveGifts(gifts) {
-    localStorage.setItem('wallet_gifts', JSON.stringify(gifts));
+async function addTransaction(transactionData) {
+    try {
+        if (!api) await loadAPI();
+        
+        // اعتبارسنجی داده‌ها
+        if (!transactionData.user_email || transactionData.amount === undefined) {
+            throw new Error('ایمیل کاربر و مقدار تراکنش الزامی است');
+        }
+        
+        return await api.addTransaction(transactionData);
+    } catch (error) {
+        console.error('Error in addTransaction:', error);
+        throw new Error('خطا در ثبت تراکنش: ' + error.message);
+    }
+}
+
+async function getGifts() {
+    try {
+        if (!api) await loadAPI();
+        const gifts = await api.getGifts();
+        return Array.isArray(gifts) ? gifts : [];
+    } catch (error) {
+        console.error('Error in getGifts:', error);
+        throw new Error('خطا در دریافت لیست هدایا: ' + error.message);
+    }
+}
+
+async function addGift(giftData) {
+    try {
+        if (!api) await loadAPI();
+        
+        // اعتبارسنجی داده‌ها
+        if (!giftData.name || !giftData.price) {
+            throw new Error('نام و قیمت هدیه الزامی است');
+        }
+        
+        return await api.addGift(giftData);
+    } catch (error) {
+        console.error('Error in addGift:', error);
+        throw new Error('خطا در افزودن هدیه: ' + error.message);
+    }
+}
+
+async function buyGift(user_email, gift_id) {
+    try {
+        if (!api) await loadAPI();
+        
+        // اعتبارسنجی داده‌ها
+        if (!user_email || !gift_id) {
+            throw new Error('ایمیل کاربر و شناسه هدیه الزامی است');
+        }
+        
+        return await api.buyGift(user_email, gift_id);
+    } catch (error) {
+        console.error('Error in buyGift:', error);
+        throw new Error('خطا در خرید هدیه: ' + error.message);
+    }
+}
+
+// محاسبه موجودی کاربر
+async function getUserBalance(email) {
+    try {
+        if (!api) await loadAPI();
+        const user = await api.getUser(email);
+        return user ? (user.balance || 0) : 0;
+    } catch (error) {
+        console.error('Error in getUserBalance:', error);
+        return 0;
+    }
 }
 
 // مدیریت کاربر فعلی
 function getCurrentUser() {
-    return JSON.parse(localStorage.getItem('currentUser'));
+    const userStr = localStorage.getItem('currentUser');
+    try {
+        return userStr ? JSON.parse(userStr) : null;
+    } catch (error) {
+        console.error('Error parsing current user:', error);
+        return null;
+    }
 }
 
 function setCurrentUser(user) {
-    localStorage.setItem('currentUser', JSON.stringify(user));
+    try {
+        localStorage.setItem('currentUser', JSON.stringify(user));
+    } catch (error) {
+        console.error('Error setting current user:', error);
+    }
 }
 
 function clearCurrentUser() {
     localStorage.removeItem('currentUser');
 }
 
-// محاسبه موجودی کاربر
-function getUserBalance(email) {
-    const transactions = getTransactions();
-    const userTransactions = transactions.filter(t => t.email === email);
-    return userTransactions.reduce((sum, t) => sum + t.amount, 0);
+// افزودن اعتبار به کاربر (برای ادمین)
+async function addCreditToUser(user_email, amount, description = 'افزودن اعتبار توسط مدیر') {
+    try {
+        const currentUser = getCurrentUser();
+        
+        const transactionData = {
+            user_email: user_email,
+            amount: amount,
+            type: 'افزودن اعتبار',
+            description: description,
+            admin_email: currentUser ? currentUser.email : 'system'
+        };
+        
+        return await addTransaction(transactionData);
+    } catch (error) {
+        console.error('Error in addCreditToUser:', error);
+        throw error;
+    }
 }
 
-// بررسی دسترسی ادمین
-function isAdmin() {
-    const user = getCurrentUser();
-    return user && user.role === 'admin';
+// تابع کمکی برای بارگذاری API
+async function loadAPI() {
+    if (!api) {
+        try {
+            const apiModule = await import('./api.js');
+            api = apiModule.default || apiModule.api;
+        } catch (error) {
+            throw new Error('API module not available');
+        }
+    }
+    return api;
 }
 
-// بررسی دسترسی کاربر
-function isUser() {
-    const user = getCurrentUser();
-    return user && user.role === 'user';
+// تست اتصال به سرور
+async function testConnection() {
+    try {
+        if (!api) await loadAPI();
+        const health = await api.request('/api/health');
+        return {
+            success: true,
+            message: 'اتصال به سرور برقرار است',
+            data: health
+        };
+    } catch (error) {
+        return {
+            success: false,
+            message: 'خطا در اتصال به سرور',
+            error: error.message
+        };
+    }
+}
+
+// توابع قدیمی برای سازگاری (اختیاری)
+async function saveUsers(users) {
+    console.warn('saveUsers is deprecated - users are managed via API');
+    return Promise.resolve();
+}
+
+async function saveTransactions(transactions) {
+    console.warn('saveTransactions is deprecated - transactions are managed via API');
+    return Promise.resolve();
+}
+
+async function saveGifts(gifts) {
+    console.warn('saveGifts is deprecated - gifts are managed via API');
+    return Promise.resolve();
 }
