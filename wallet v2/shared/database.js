@@ -1,6 +1,6 @@
-// سیستم دیتابیس - استفاده از API موجود
-// هیچ متغیر جدیدی تعریف نمی‌کنیم
+// سیستم دیتابیس - استفاده از API موجود بدون تعریف مجدد
 
+// توابع اصلی دیتابیس
 async function getUsers() {
     try {
         console.log('📡 دریافت لیست کاربران...');
@@ -28,7 +28,6 @@ async function getTransactions(email = null) {
             return await api.getTransactions(email);
         } else {
             console.log('📡 دریافت همه تراکنش‌ها');
-            // برای ادمین - همه تراکنش‌ها
             const allUsers = await getUsers();
             let allTransactions = [];
             
@@ -135,42 +134,6 @@ async function buyGift(user_email, gift_id) {
     } catch (error) {
         console.error('❌ خطا در خرید هدیه:', error);
         throw error;
-    }
-}
-
-// توابع قدیمی برای سازگاری
-async function saveUsers(users) {
-    console.warn('⚠️ saveUsers استفاده نمی‌شود - کاربران از طریق API مدیریت می‌شوند');
-    return Promise.resolve();
-}
-
-async function saveTransactions(transactions) {
-    console.warn('⚠️ saveTransactions استفاده نمی‌شود - تراکنش‌ها از طریق API مدیریت می‌شوند');
-    return Promise.resolve();
-}
-
-async function saveGifts(gifts) {
-    console.warn('⚠️ saveGifts استفاده نمی‌شود - هدایا از طریق API مدیریت می‌شوند');
-    return Promise.resolve();
-}
-
-// تست اتصال
-async function testConnection() {
-    try {
-        const health = await api.health();
-        console.log('✅ تست اتصال موفق:', health);
-        return {
-            success: true,
-            message: 'اتصال به سرور برقرار است',
-            data: health
-        };
-    } catch (error) {
-        console.error('❌ تست اتصال ناموفق:', error);
-        return {
-            success: false,
-            message: 'خطا در اتصال به سرور',
-            error: error.message
-        };
     }
 }
 
