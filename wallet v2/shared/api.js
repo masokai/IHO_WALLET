@@ -1,12 +1,16 @@
-// تنظیمات API
+// تنظیمات API - نسخه کامل
 const API_BASE_URL = 'https://iho-wallet-backend2.onrender.com';
 
 class API {
     constructor() {
         this.baseURL = API_BASE_URL;
+        this.timeout = 10000; // 10 ثانیه
     }
 
     async request(endpoint, options = {}) {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+
         try {
             const url = `${this.baseURL}${endpoint}`;
             const response = await fetch(url, {
@@ -14,17 +18,23 @@ class API {
                     'Content-Type': 'application/json',
                     ...options.headers
                 },
+                signal: controller.signal,
                 ...options
             });
 
+            clearTimeout(timeoutId);
+
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.error || `API Error: ${response.status}`);
+                throw new Error(errorData.error || `خطای سرور: ${response.status}`);
             }
 
             return await response.json();
         } catch (error) {
-            console.error('API Request failed:', error);
+            clearTimeout(timeoutId);
+            if (error.name === 'AbortError') {
+                throw new Error('اتصال به سرور timeout خورد');
+            }
             throw error;
         }
     }
@@ -88,7 +98,23 @@ class API {
             body: JSON.stringify({ user_email, gift_id })
         });
     }
+
+    // سلامت سرویس
+    async health() {
+        return this.request('/api/health');
+    }
 }
 
 // ایجاد نمونه اصلی
-const api = new API();
+const apiInstance = new API();
+
+// export برای استفاده در ماژول‌ها
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { API: apiInstance, api: apiInstance };
+} else {
+    window.API = apiInstance;
+    window.api = apiInstance;
+}
+
+export default apiInstance;
+export { apiInstance as api };
