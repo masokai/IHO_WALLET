@@ -2,7 +2,6 @@ const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
 const cors = require('cors');
 const path = require('path');
-const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -10,11 +9,6 @@ const PORT = process.env.PORT || 3000;
 // middleware
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
-
-// ایجاد پوشه uploads اگر وجود ندارد
-if (!fs.existsSync('./uploads')) {
-    fs.existsSync('./uploads');
-}
 
 // دیتابیس SQLite
 const db = new sqlite3.Database('./database.db');
@@ -67,6 +61,9 @@ db.serialize(() => {
     
     db.run(`INSERT OR IGNORE INTO users (email, password, name, role, balance) 
             VALUES ('a.khazael.iho@gmail.com', '1234', 'علی خزاعی', 'user', 1000)`);
+    
+    db.run(`INSERT OR IGNORE INTO users (email, password, name, role, balance) 
+            VALUES ('b.bakhshayesh.iho@gmail.com', '1234', 'بابک بخشایش', 'user', 1000)`);
 
     // هدایای نمونه
     db.run(`INSERT OR IGNORE INTO gifts (name, price, description) 
@@ -74,6 +71,9 @@ db.serialize(() => {
     
     db.run(`INSERT OR IGNORE INTO gifts (name, price, description) 
             VALUES ('ایزنک و پینت بال', 550000, 'مجموعه تفریحی و ورزشی')`);
+    
+    db.run(`INSERT OR IGNORE INTO gifts (name, price, description) 
+            VALUES ('آرایشی و بهداشتی', 830000, 'محصولات آرایشی و مراقبتی')`);
 });
 
 // Routes
@@ -87,7 +87,7 @@ app.get('/api/health', (req, res) => {
     });
 });
 
-// دریافت کاربران
+// دریافت همه کاربران
 app.get('/api/users', (req, res) => {
     db.all(`SELECT id, email, name, role, avatar, balance, created_at FROM users ORDER BY created_at DESC`, 
     (err, rows) => {
@@ -130,6 +130,10 @@ app.get('/api/transactions', (req, res) => {
 app.post('/api/transactions', (req, res) => {
     const { user_email, amount, type, description, admin_email } = req.body;
     
+    if (!user_email || amount === undefined || !type) {
+        return res.status(400).json({ error: 'فیلدهای الزامی را پر کنید' });
+    }
+
     // شروع تراکنش دیتابیس
     db.serialize(() => {
         db.run('BEGIN TRANSACTION');
@@ -158,15 +162,14 @@ app.post('/api/transactions', (req, res) => {
                 db.run('COMMIT');
                 res.json({ 
                     id: transactionId, 
-                    message: 'تراکنش با موفقیت ثبت شد',
-                    newBalance: await getuserBalance(user_email)
+                    message: 'تراکنش با موفقیت ثبت شد'
                 });
             });
         });
     });
 });
 
-// دریافت هدایا
+// دریافت همه هدایا
 app.get('/api/gifts', (req, res) => {
     db.all(`SELECT * FROM gifts WHERE is_active = true ORDER BY price ASC`, 
     (err, rows) => {
@@ -175,9 +178,13 @@ app.get('/api/gifts', (req, res) => {
     });
 });
 
-// افزودن هدیه
+// افزودن هدیه جدید
 app.post('/api/gifts', (req, res) => {
     const { name, price, description, image_url } = req.body;
+    
+    if (!name || !price) {
+        return res.status(400).json({ error: 'نام و قیمت هدیه الزامی است' });
+    }
     
     db.run(`INSERT INTO gifts (name, price, description, image_url) 
             VALUES (?, ?, ?, ?)`, 
@@ -190,6 +197,10 @@ app.post('/api/gifts', (req, res) => {
 // خرید هدیه
 app.post('/api/buy-gift', (req, res) => {
     const { user_email, gift_id } = req.body;
+    
+    if (!user_email || !gift_id) {
+        return res.status(400).json({ error: 'ایمیل کاربر و شناسه هدیه الزامی است' });
+    }
     
     db.serialize(() => {
         db.run('BEGIN TRANSACTION');
@@ -211,6 +222,11 @@ app.post('/api/buy-gift', (req, res) => {
                 if (err) {
                     db.run('ROLLBACK');
                     return res.status(500).json({ error: err.message });
+                }
+                
+                if (!user) {
+                    db.run('ROLLBACK');
+                    return res.status(404).json({ error: 'کاربر یافت نشد' });
                 }
                 
                 if (user.balance < gift.price) {
@@ -239,6 +255,7 @@ app.post('/api/buy-gift', (req, res) => {
                         
                         db.run('COMMIT');
                         res.json({ 
+                            success: true,
                             message: `هدیه "${gift.name}" با موفقیت خریداری شد`,
                             remainingBalance: user.balance - gift.price
                         });
@@ -246,6 +263,27 @@ app.post('/api/buy-gift', (req, res) => {
                 });
             });
         });
+    });
+});
+
+// افزودن کاربر جدید
+app.post('/api/users', (req, res) => {
+    const { email, password, name, role } = req.body;
+    
+    if (!email || !password || !name) {
+        return res.status(400).json({ error: 'ایمیل، رمز عبور و نام الزامی است' });
+    }
+    
+    db.run(`INSERT INTO users (email, password, name, role) 
+            VALUES (?, ?, ?, ?)`, 
+    [email, password, name, role || 'user'], function(err) {
+        if (err) {
+            if (err.message.includes('UNIQUE constraint failed')) {
+                return res.status(400).json({ error: 'این ایمیل قبلاً ثبت شده است' });
+            }
+            return res.status(500).json({ error: err.message });
+        }
+        res.json({ id: this.lastID, message: 'کاربر با موفقیت افزوده شد' });
     });
 });
 
@@ -269,16 +307,6 @@ app.post('/api/login', (req, res) => {
     });
 });
 
-// تابع کمکی برای دریافت موجودی
-function getuserBalance(email) {
-    return new Promise((resolve, reject) => {
-        db.get(`SELECT balance FROM users WHERE email = ?`, [email], (err, row) => {
-            if (err) reject(err);
-            else resolve(row ? row.balance : 0);
-        });
-    });
-}
-
 // مدیریت خطاهای ناشناخته
 app.use((err, req, res, next) => {
     console.error('خطای سرور:', err);
@@ -293,4 +321,6 @@ app.use('*', (req, res) => {
 app.listen(PORT, () => {
     console.log(`🚀 سرور IHO Wallet اجرا شد روی پورت ${PORT}`);
     console.log(`📊 سلامت سرویس: http://localhost:${PORT}/api/health`);
+    console.log(`👤 حساب ادمین: admin@iho.com / admin123`);
+    console.log(`👥 حساب کاربری: akhodabakhshiiho@gmail.com / 1234`);
 });
